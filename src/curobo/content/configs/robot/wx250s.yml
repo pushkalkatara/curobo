@@ -1,0 +1,85 @@
+robot_cfg:
+    kinematics:
+        usd_path: "/home/pushkal/Desktop/manipulation/curobo/examples/isaac_sim/usds/wx250s_xml.usd"
+        usd_robot_root: "/wx250s"
+        isaac_usd_path: "/home/pushkal/Desktop/manipulation/curobo/examples/isaac_sim/usds/wx250s_xml.usd"
+        use_usd_kinematics: True
+        usd_flip_joints: {
+          "waist": "X",
+          "shoulder": "X",
+          "elbow": "X",
+          "forearm_roll": "X",
+          "wrist_angle": "X",
+          "wrist_rotate": "X",
+          "left_finger": "X",
+          "right_finger": "X"
+        }
+        usd_flip_joint_limits: []
+
+        # urdf_path: "/home/pushkal/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_descriptions/robot/wx250s.urdf"
+        # asset_root_path: "/home/pushkal/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_descriptions/robot"
+
+        base_link: "wx250s_base_link"
+        ee_link: "wx250s_gripper_link"
+        link_names: null
+        lock_joints: null
+        extra_links: null
+
+        # collision_link_names: [
+        #     "wx250s_base_link",
+        #     "wx250s_shoulder_link",
+        #     "wx250s_upper_arm_link",
+        #     "wx250s_upper_forearm_link",
+        #     "wx250s_lower_forearm_link",
+        #     "wx250s_wrist_link",
+        #     "wx250s_gripper_link",
+        #     "wx250s_left_finger_link",
+        #     "wx250s_right_finger_link"
+        # ]
+        
+        collision_spheres: "spheres/wx250s.yml"
+        collision_sphere_buffer: 0.005
+        extra_collision_spheres: {}
+        self_collision_ignore: {
+            "wx250s_base_link": ["wx250s_shoulder_link"],
+            "wx250s_shoulder_link": ["wx250s_upper_arm_link"],
+            "wx250s_upper_arm_link": ["wx250s_upper_forearm_link"],
+            "wx250s_upper_forearm_link": ["wx250s_lower_forearm_link"],
+            "wx250s_lower_forearm_link": ["wx250s_wrist_link"],
+            "wx250s_wrist_link": ["wx250s_gripper_link"],
+            "wx250s_gripper_link": ["wx250s_left_finger_link", wx250s_right_finger_link]
+        }
+        self_collision_buffer: {
+            "wx250s_base_link": 0.0,
+            "wx250s_shoulder_link": 0.0,
+            "wx250s_upper_arm_link": 0.0,
+            "wx250s_upper_forearm_link": 0.0,
+            "wx250s_lower_forearm_link": 0.0,
+            "wx250s_wrist_link": 0.0,
+            "wx250s_gripper_link": 0.0,
+            "wx250s_left_finger_link": 0.0,
+            "wx250s_right_finger_link": 0.0
+        }
+
+        use_global_cumul: True
+        mesh_link_names: [
+            "wx250s_base_link",
+            "wx250s_shoulder_link",
+            "wx250s_upper_arm_link",
+            "wx250s_upper_forearm_link",
+            "wx250s_lower_forearm_link",
+            "wx250s_wrist_link",
+            "wx250s_gripper_link",
+            "wx250s_left_finger_link",
+            "wx250s_right_finger_link"
+        ]
+        #lock_joints: {"left_finger": 0.4, "right_finger": -0.4}
+
+        cspace:
+            joint_names: ['waist', 'shoulder', 'elbow', 'forearm_roll', 'wrist_angle', 'wrist_rotate', 'left_finger', 'right_finger'] # List[str]
+            retract_config: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # List[float]
+            null_space_weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] # List[str]
+            cspace_distance_weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] # List[str]
+            max_jerk: 500.0
+            max_acceleration: 15.0
+

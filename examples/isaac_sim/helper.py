@@ -19,7 +19,8 @@ from omni.isaac.core import World
 from omni.isaac.core.materials import OmniPBR
 from omni.isaac.core.objects import cuboid
 from omni.isaac.core.robots import Robot
-from pxr import UsdPhysics
+from omni.isaac.core.utils.stage import add_reference_to_stage
+from pxr import UsdPhysics, Usd, Sdf
 
 # CuRobo
 from curobo.util.logger import log_warn
@@ -43,6 +44,9 @@ from omni.isaac.core.utils.extensions import enable_extension
 # CuRobo
 from curobo.util_file import get_assets_path, get_filename, get_path_of_dir, join_path
 
+def add_int_reference(prim: Usd.Prim, ref_target_path: Sdf.Path) -> None:
+    references: Usd.References = prim.GetReferences()
+    references.AddInternalReference(ref_target_path)
 
 def add_extensions(simulation_app, headless_mode: Optional[str] = None):
     ext_list = [
@@ -68,54 +72,60 @@ def add_robot_to_scene(
     robot_name: str = "robot",
     position: np.array = np.array([0, 0, 0]),
 ):
-
-    urdf_interface = _urdf.acquire_urdf_interface()
-    # Set the settings in the import config
-    import_config = _urdf.ImportConfig()
-    import_config.merge_fixed_joints = False
-    import_config.convex_decomp = False
-    import_config.fix_base = True
-    import_config.make_default_prim = True
-    import_config.self_collision = False
-    import_config.create_physics_scene = True
-    import_config.import_inertia_tensor = False
-    import_config.default_drive_strength = 1047.19751
-    import_config.default_position_drive_damping = 52.35988
-    import_config.default_drive_type = _urdf.UrdfJointTargetType.JOINT_DRIVE_POSITION
-    import_config.distance_scale = 1
-    import_config.density = 0.0
-
     asset_path = get_assets_path()
-    if (
-        "external_asset_path" in robot_config["kinematics"]
-        and robot_config["kinematics"]["external_asset_path"] is not None
-    ):
-        asset_path = robot_config["kinematics"]["external_asset_path"]
-    full_path = join_path(asset_path, robot_config["kinematics"]["urdf_path"])
-    robot_path = get_path_of_dir(full_path)
-    filename = get_filename(full_path)
-    imported_robot = urdf_interface.parse_urdf(robot_path, filename, import_config)
-    dest_path = subroot
-    robot_path = urdf_interface.import_robot(
-        robot_path,
-        filename,
-        imported_robot,
-        import_config,
-        dest_path,
-    )
-
     base_link_name = robot_config["kinematics"]["base_link"]
 
-    robot_p = Robot(
-        prim_path=robot_path + "/" + base_link_name,
-        name=robot_name,
-    )
+    if load_from_usd:
+        full_path = join_path(asset_path, robot_config["kinematics"]["isaac_usd_path"])
+        prim_path = f"/World/{robot_name}"
+        add_reference_to_stage(usd_path=full_path, prim_path=prim_path)
+        robot_p = Robot(prim_path=prim_path, name=robot_name)
+        robot_path = prim_path
+    else:
+        urdf_interface = _urdf.acquire_urdf_interface()
+        # Set the settings in the import config
+        import_config = _urdf.ImportConfig()
+        import_config.merge_fixed_joints = False
+        import_config.convex_decomp = False
+        import_config.fix_base = True
+        import_config.make_default_prim = True
+        import_config.self_collision = False
+        import_config.create_physics_scene = True
+        import_config.import_inertia_tensor = False
+        import_config.default_drive_strength = 1047.19751
+        import_config.default_position_drive_damping = 52.35988
+        import_config.default_drive_type = _urdf.UrdfJointTargetType.JOINT_DRIVE_POSITION
+        import_config.distance_scale = 1
+        import_config.density = 0.0
 
+        if (
+            "external_asset_path" in robot_config["kinematics"]
+            and robot_config["kinematics"]["external_asset_path"] is not None
+        ):
+            asset_path = robot_config["kinematics"]["external_asset_path"]
+        full_path = join_path(asset_path, robot_config["kinematics"]["urdf_path"])
+        robot_path = get_path_of_dir(full_path)
+        filename = get_filename(full_path)
+        imported_robot = urdf_interface.parse_urdf(robot_path, filename, import_config)
+        dest_path = subroot
+        robot_path = urdf_interface.import_robot(
+            robot_path,
+            filename,
+            imported_robot,
+            import_config,
+            dest_path,
+        )
+        prim_path = robot_path + "/" + base_link_name
+
+        robot_p = Robot(
+            prim_path=prim_path,
+            name=robot_name,
+        )
+    
     robot_prim = robot_p.prim
     stage = robot_prim.GetStage()
     linkp = stage.GetPrimAtPath(robot_path)
     set_prim_transform(linkp, [position[0], position[1], position[2], 1, 0, 0, 0])
-
     robot = my_world.scene.add(robot_p)
     return robot, robot_path
 
